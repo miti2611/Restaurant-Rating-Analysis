@@ -1,0 +1,263 @@
+<html>
+    <head>
+        <title>Donations</title>
+        <script src="d3.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/linq.js/2.2.0.2/linq.min.js"></script>
+        <style>
+            body {
+                text-align: center;
+            }
+            svg {
+                border: solid 1px #000;
+				height: 400px;
+				width: 800px;
+            }
+            .graticule {
+                fill: none;
+                stroke: #777;
+                stroke-width: 1px;
+                stroke-opacity: .5;
+            }
+
+            #sphere {
+                fill: none;
+                stroke-width: 2px;
+                stroke: black;
+            }
+
+
+        </style>
+    </head>
+    <body>
+        <h1>  </h1>
+        <div class = "lcs">
+            <h2>Indian</h2>
+            <svg id = "Indian">
+            </svg>
+        </div>
+		<div>
+            <h2>American</h2>
+            <svg id = "American">
+            </svg>
+        </div>
+		<div>
+            <h2>Thai</h2>
+            <svg id = "Thai">
+            </svg>
+        </div>
+		<div>
+            <h2>Vietnamese</h2>
+            <svg id = "Vietnamese">
+            </svg>
+        </div>
+		<div>
+            <h2>Mediterranean</h2>
+            <svg id = "Mediterranean">
+            </svg>
+        </div>
+		<div>
+            <h2>Chinese</h2>
+            <svg id = "Chinese">
+            </svg>
+        </div>
+		<div>
+            <h2>Japanese</h2>
+            <svg id = "Japanese">
+            </svg>
+        </div>
+		<div>
+            <h2>French</h2>
+            <svg id = "French">
+            </svg>
+        </div>
+		<div>
+            <h2>Italian</h2>
+            <svg id = "Italian">
+            </svg>
+        </div>
+		<div>
+            <h2>Mexican</h2>
+            <svg id = "Mexican">
+            </svg>
+        </div>
+		
+    </body>
+    <script>
+        
+        const WIDTH = 800
+        const HEIGHT = 400
+        const MARGIN = {
+                left: 50,
+                top: 30,
+                bottom: 40,
+                right: 0
+            }
+
+        function drawLineChart(modifiedData, containerID){
+			console.log(modifiedData)
+            
+			yearRangeMin = d3.min(modifiedData, d=>d.year);
+			yearRangeMax = d3.max(modifiedData, d=>d.year);
+            minValue = d3.min(modifiedData, d=>d.rating);
+			maxValue = d3.max(modifiedData, d=>d.rating);
+            
+            xScale = d3.scaleLinear()
+                .range([MARGIN.left, WIDTH - MARGIN.right - 100]) //**TODO 2.1 ** - PROVIDE RANGE FOR SCALE
+                .domain([yearRangeMin, yearRangeMax])
+            yScale = d3.scaleLinear()
+                .range([0, HEIGHT - MARGIN.top - MARGIN.bottom])
+                .domain([maxValue, minValue])
+
+            var colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+            colorScale.domain(modifiedData.map(function (d){ return d.business; }));
+			
+			//console.log(modifiedData.map(d => { return (d.year);}))
+            const Line = d3.line()
+                    .x(d => xScale(d.year))
+                    .y(d => yScale(d.rating))
+    
+            let chartBody = d3.selectAll(containerID).data(modifiedData)
+                .append("g")
+                .attr("transform", `translate(${MARGIN.left}, ${MARGIN.top})`)
+              
+            for(var key in modifiedData){
+			//console.log(modifiedData[key].rating)
+			chartBody.append("path")
+                .datum(modifiedData)
+                .attr("fill", "none")
+                .attr("stroke",function (d){ return colorScale(modifiedData[key].business); })
+                .attr("d", Line)
+            }
+          
+            
+            //Axis
+            let xAxis = d3.axisBottom()
+                .scale(xScale)
+
+            chartBody.append('svg:g')
+                .attr('class', 'x axis')
+                .attr('transform', 'translate(0,' + (HEIGHT - MARGIN.bottom-20) + ')')
+                .call(xAxis);
+
+            let yAxis = d3.axisLeft()
+                .scale(yScale)
+
+            chartBody.append('svg:g')
+                .attr('class', 'y axis')
+                .attr('transform', 'translate(' + (MARGIN.left) + ',0)')
+                .call(yAxis)
+                .append("text")
+                        .text("Rating")
+                        .attr("dx", -MARGIN.left+15)
+                        .attr("dy", MARGIN.top+15)
+                        .attr("text-anchor", "middle")
+                        .attr("fill", "black")
+                        .attr("transform", `rotate(270, ${-MARGIN.left+15},${MARGIN.top+15})`);
+
+            
+        }
+
+		function manipulateData(data, containerID) {
+			data = Object.keys(data)
+				.filter(k => !isNaN(k)) 
+				.map(k => ({
+					"quarters" : data[k]["quarters"],
+					"business_name" : data[k]["business_name"]
+				}))
+			 data = data
+						.map(function(k) {
+								for (i = 0; i < k.quarters.length; i++) {
+									k.quarters[i].quarter = (new Date(k.quarters[i].quarter)).getFullYear();
+								}
+								return k;
+						})
+			var countSum = {};
+			var ratingSum = {};
+			var ratingAverage = {};
+			var count = {};
+            data.forEach(function(business, index) {
+                business.quarters.forEach(function(item){
+					countSum[item.quarter] = countSum[item.quarter] + item.count || item.count;
+                    ratingSum[item.quarter] = ratingSum[item.quarter] + item.rating || item.rating;					
+					count[item.quarter] = count[item.quarter] + 1 || 1;
+					ratingAverage[item.quarter] = ratingSum[item.quarter]/count[item.quarter];
+                });
+				data[index]["ratingAverage"] = ratingAverage;
+                ratingAverage = {};
+                ratingSum = {};
+                countSum = {};
+				count = {};
+            });
+			var modifiedData = [];
+			data.forEach(function(business, index) {
+                avg = business.ratingAverage;
+				for (var year in avg) {
+					if (avg.hasOwnProperty(year)) {
+						modifiedData.push({"business" : business.business_name, "year" : parseInt(year), "rating" : avg[year]})
+					}
+				}
+            });
+			//console.log(modifiedData.map(d=>d.year));
+			drawLineChart(modifiedData, containerID);
+		}
+        
+		function loadData() {
+            d3.queue()
+                .defer(d3.json, "Las Vegas Business.json")
+                .await((err, data) => {
+				Indian = data.filter(function(i) {
+                        return i.category == "Indian"
+                })
+				American = data.filter(function(i) {
+                        return i.category == "American (Traditional)"
+                })
+				Mexican = data.filter(function(i) {
+                        return i.category == "Mexican"
+                })
+				French = data.filter(function(i) {
+                        return i.category == "French"
+                })
+				Chinese = data.filter(function(i) {
+                        return i.category == "Chinese"
+                })
+				Japanese = data.filter(function(i) {
+                        return i.category == "Japanese"
+                })
+				Vietnamese = data.filter(function(i) {
+                        return i.category == "Vietnamese"
+                })
+				Thai = data.filter(function(i) {
+                        return i.category == "Thai"
+                })
+				Italian = data.filter(function(i) {
+                        return i.category == "Italian"
+                })
+				Mediterranean = data.filter(function(i) {
+                        return i.category == "Mediterranean"
+                })
+				//console.log(Indian)		
+				//console.log(data.map(d=>d.category))
+				manipulateData(Indian, "#Indian")
+				manipulateData(American, "#American")
+				manipulateData(Mexican, "#Mexican")
+				manipulateData(French, "#French")
+				manipulateData(Chinese, "#Chinese")
+				manipulateData(Japanese, "#Japanese")
+				manipulateData(Vietnamese, "#Vietnamese")
+				manipulateData(Thai, "#Thai")
+				manipulateData(Italian, "#Italian")
+				manipulateData(Mediterranean, "#Mediterranean")
+				 })
+        }
+
+        function main() {
+            d3.select("#LineChart")
+                .attr("width", WIDTH)
+                .attr("height", HEIGHT)
+            loadData()
+        }
+
+        main()
+
+    </script>
+</html>
