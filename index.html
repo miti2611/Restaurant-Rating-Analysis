@@ -2,83 +2,107 @@
     <head>
         <title>Donations</title>
         <script src="d3.js"></script>
-		<script src="//cdnjs.cloudflare.com/ajax/libs/linq.js/2.2.0.2/linq.min.js"></script>
-        <style>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.13.0/d3-legend.js"></script>
+		<style>
             body {
                 text-align: center;
             }
-            svg {
-                border: solid 1px #000;
-				height: 400px;
+            .restaurants {
+                height: 400px;
 				width: 800px;
-            }
-            .graticule {
-                fill: none;
-                stroke: #777;
-                stroke-width: 1px;
-                stroke-opacity: .5;
-            }
+				margin-left: 250px;
+				background-color: transparent;
 
-            #sphere {
-                fill: none;
-                stroke-width: 2px;
-                stroke: black;
             }
-
-
+			.legend{
+                display: inline;
+            }
+			.lcs_am {
+				border: solid 1px #000;
+				height: 600px;
+				width: 1050px;
+				margin-left: 450px;
+				margin-top: 30px;
+            }
+			.lcs {
+				border: solid 1px #000;
+				height: 500px;
+				width: 1050px;
+				margin-left: 450px;
+				margin-top: 30px;
+				
+            }
+			.legends {
+				margin-top: -450px;
+				width: 280px;
+				height: 800px;
+				margin-left: -750px;
+			}
         </style>
     </head>
     <body>
-        <h1>  </h1>
+	
+        <h1> Restaurant Data Analysis </h1>
         <div class = "lcs">
             <h2>Indian</h2>
-            <svg id = "Indian">
-            </svg>
+            <svg class = "restaurants" id = "Indian">
+			</svg>
+			<svg class = "legends" id = "IndianLegend"></svg>
         </div>
-		<div>
+		
+		<div class = "lcs_am">
             <h2>American</h2>
-            <svg id = "American">
+            <svg class = "restaurants" id = "American">
             </svg>
+			<svg class = "legends" id = "AmericanLegend"></svg>
         </div>
-		<div>
+		<div class = "lcs">
             <h2>Thai</h2>
-            <svg id = "Thai">
+            <svg class = "restaurants" id = "Thai">
             </svg>
+			<svg class = "legends" id = "ThaiLegend"></svg>
         </div>
-		<div>
+		<div class = "lcs">
             <h2>Vietnamese</h2>
-            <svg id = "Vietnamese">
+            <svg class = "restaurants" id = "Vietnamese">
             </svg>
+			<svg class = "legends" id = "VietnameseLegend"></svg>
         </div>
-		<div>
+		<div class = "lcs">
             <h2>Mediterranean</h2>
-            <svg id = "Mediterranean">
+            <svg class = "restaurants" id = "Mediterranean">
             </svg>
+			<svg class = "legends" id = "MediterraneanLegend"></svg>
         </div>
-		<div>
+		<div class = "lcs">
             <h2>Chinese</h2>
-            <svg id = "Chinese">
+            <svg class = "restaurants" id = "Chinese">
             </svg>
+			<svg class = "legends" id = "ChineseLegend"></svg>
         </div>
-		<div>
+		<div class = "lcs">
             <h2>Japanese</h2>
-            <svg id = "Japanese">
+            <svg class = "restaurants" id = "Japanese">
             </svg>
+			<svg class = "legends" id = "JapaneseLegend"></svg>
         </div>
-		<div>
+		<div class = "lcs">
             <h2>French</h2>
-            <svg id = "French">
+            <svg class = "restaurants" id = "French">
             </svg>
+			<svg class = "legends" id = "FrenchLegend"></svg>
         </div>
-		<div>
+		<div class = "lcs">
             <h2>Italian</h2>
-            <svg id = "Italian">
+            <svg class = "restaurants" id = "Italian">
             </svg>
+			<svg class = "legends" id = "ItalianLegend"></svg>
         </div>
-		<div>
+		<div class = "lcs">
             <h2>Mexican</h2>
-            <svg id = "Mexican">
+            <svg class = "restaurants" id = "Mexican">
             </svg>
+			<svg class = "legends" id = "MexicanLegend"></svg>
         </div>
 		
     </body>
@@ -92,72 +116,106 @@
                 bottom: 40,
                 right: 0
             }
-
-        function drawLineChart(modifiedData, containerID){
-			console.log(modifiedData)
-            
-			yearRangeMin = d3.min(modifiedData, d=>d.year);
-			yearRangeMax = d3.max(modifiedData, d=>d.year);
-            minValue = d3.min(modifiedData, d=>d.rating);
-			maxValue = d3.max(modifiedData, d=>d.rating);
-            
-            xScale = d3.scaleLinear()
-                .range([MARGIN.left, WIDTH - MARGIN.right - 100]) //**TODO 2.1 ** - PROVIDE RANGE FOR SCALE
-                .domain([yearRangeMin, yearRangeMax])
-            yScale = d3.scaleLinear()
-                .range([0, HEIGHT - MARGIN.top - MARGIN.bottom])
-                .domain([maxValue, minValue])
-
-            var colorScale = d3.scaleOrdinal(d3.schemeCategory10);
-            colorScale.domain(modifiedData.map(function (d){ return d.business; }));
 			
-			//console.log(modifiedData.map(d => { return (d.year);}))
-            const Line = d3.line()
+		function drawLineChart(modifiedData, containerID, legendId, reviewMax, reviewMin){
+			yearRangeMin = d3.min(modifiedData, d=>d3.min(d3.keys(d.ratingAverage)));
+			yearRangeMax = d3.max(modifiedData, d=>d3.max(d3.keys(d.ratingAverage)));
+			minValue = d3.min(modifiedData, d=>d3.min(d3.values(d.ratingAverage)));
+			maxValue = d3.max(modifiedData, d=>d3.max(d3.values(d.ratingAverage)));
+			meanValue = d3.mean(modifiedData, d=>d3.mean(d3.values(d.ratingAverage)));
+			
+			var xScale = d3.scaleLinear()
+				.range([MARGIN.left, WIDTH - MARGIN.right - 100])
+				.domain([yearRangeMin, yearRangeMax])
+			var yScale = d3.scaleLinear()
+				.range([0, HEIGHT - MARGIN.top - MARGIN.bottom])
+				.domain([maxValue, minValue])
+
+			var widthScale = d3.scaleLinear()
+				.range([-10, 10])
+				.domain([reviewMax, reviewMin])
+
+			
+			var colorScale = d3.scaleOrdinal(d3.schemeCategory20);
+			colorScale.domain(modifiedData.map(function (d){ return d.business_name; }));
+			
+			const Line = d3.area()
                     .x(d => xScale(d.year))
-                    .y(d => yScale(d.rating))
-    
-            let chartBody = d3.selectAll(containerID).data(modifiedData)
-                .append("g")
-                .attr("transform", `translate(${MARGIN.left}, ${MARGIN.top})`)
-              
-            for(var key in modifiedData){
-			//console.log(modifiedData[key].rating)
-			chartBody.append("path")
-                .datum(modifiedData)
-                .attr("fill", "none")
-                .attr("stroke",function (d){ return colorScale(modifiedData[key].business); })
-                .attr("d", Line)
-            }
-          
-            
-            //Axis
-            let xAxis = d3.axisBottom()
-                .scale(xScale)
+                    .y1(d => yScale(d.rating) - widthScale(d.count))
+					.y0(d => yScale(d.rating) + widthScale(d.count))
+					
+			let chartBody = d3.selectAll(containerID).data(modifiedData)
+				.append("g")
+				.attr("transform", `translate(${MARGIN.left}, ${MARGIN.top})`)
+			  
+			for(var key in modifiedData){
+				var temp = [];
+				avg = modifiedData[key].ratingAverage;
+				for (var year in avg) {
+					if (avg.hasOwnProperty(year)) {
+						temp.push({"business" : modifiedData[key].business_name, "year" : parseInt(year), "rating" : avg[year], "count" : modifiedData[key].count[year]});
+					}
+				}
+				
+				chartBody.append("path")
+					.datum(temp)
+					.attr("fill", function (d){ return colorScale(modifiedData[key].business_name); })
+					.attr("stroke", function (d){ return colorScale(modifiedData[key].business_name); })
+					.attr("d", Line)
+					//.attr("stroke-width", )
+			}
+		  
+			
+			//Axis
+			let xAxis = d3.axisBottom()
+				.scale(xScale).tickFormat(d3.format("d"));
 
-            chartBody.append('svg:g')
-                .attr('class', 'x axis')
-                .attr('transform', 'translate(0,' + (HEIGHT - MARGIN.bottom-20) + ')')
-                .call(xAxis);
+			chartBody.append('svg:g')
+				.attr('class', 'x axis')
+				.attr('transform', 'translate(0,' + (HEIGHT - MARGIN.bottom-20) + ')')
+				.call(xAxis)
+				.append("text")
+						.text("Year")
+						.attr("dx", 375)
+						.attr("dy", 30)
+						.attr("text-anchor", "middle")
+						.attr("fill", "black")
+						.attr("transform", `rotate(0, ${-MARGIN.left+15},${MARGIN.top+15})`);
 
-            let yAxis = d3.axisLeft()
-                .scale(yScale)
+			let yAxis = d3.axisLeft()
+				.scale(yScale)
 
-            chartBody.append('svg:g')
-                .attr('class', 'y axis')
-                .attr('transform', 'translate(' + (MARGIN.left) + ',0)')
-                .call(yAxis)
-                .append("text")
-                        .text("Rating")
-                        .attr("dx", -MARGIN.left+15)
-                        .attr("dy", MARGIN.top+15)
-                        .attr("text-anchor", "middle")
-                        .attr("fill", "black")
-                        .attr("transform", `rotate(270, ${-MARGIN.left+15},${MARGIN.top+15})`);
+			chartBody.append('svg:g')
+				.attr('class', 'y axis')
+				.attr('transform', 'translate(' + (MARGIN.left) + ',0)')
+				.call(yAxis)
+				.append("text")
+						.text("Rating")
+						.attr("dx", -MARGIN.left+15)
+						.attr("dy", MARGIN.top+15)
+						.attr("text-anchor", "middle")
+						.attr("fill", "black")
+						.attr("transform", `rotate(270, ${-MARGIN.left+15},${MARGIN.top+15})`);
 
-            
+			var legend = d3.legendColor()
+                .scale(colorScale);
+
+            let legendsvg = d3.selectAll(legendId).data(modifiedData)
+                .append("g")  
+                .attr("class", "legend")
+                .call(legend); 	
+			chartBody.append("line")         
+			.style("stroke-dasharray","5,5")
+			.style("stroke", "black")  
+			.attr("x1", 50)     
+			.attr("y1", yScale(meanValue)) 
+			.attr("x2", 710)    
+			.attr("y2", yScale(meanValue))
+			.attr("stroke-width", 2);   
+		
         }
 
-		function manipulateData(data, containerID) {
+		function manipulateData(data, containerID, legendId) {
 			data = Object.keys(data)
 				.filter(k => !isNaN(k)) 
 				.map(k => ({
@@ -178,76 +236,70 @@
             data.forEach(function(business, index) {
                 business.quarters.forEach(function(item){
 					countSum[item.quarter] = countSum[item.quarter] + item.count || item.count;
-                    ratingSum[item.quarter] = ratingSum[item.quarter] + item.rating || item.rating;					
+                    ratingSum[item.quarter] = ratingSum[item.quarter] + item.rating || item.rating;
 					count[item.quarter] = count[item.quarter] + 1 || 1;
 					ratingAverage[item.quarter] = ratingSum[item.quarter]/count[item.quarter];
                 });
 				data[index]["ratingAverage"] = ratingAverage;
-                ratingAverage = {};
+                data[index]["count"] = countSum;
+				ratingAverage = {};
                 ratingSum = {};
                 countSum = {};
 				count = {};
             });
-			var modifiedData = [];
-			data.forEach(function(business, index) {
-                avg = business.ratingAverage;
-				for (var year in avg) {
-					if (avg.hasOwnProperty(year)) {
-						modifiedData.push({"business" : business.business_name, "year" : parseInt(year), "rating" : avg[year]})
-					}
-				}
-            });
-			//console.log(modifiedData.map(d=>d.year));
-			drawLineChart(modifiedData, containerID);
+			
+			let reviewMax = d3.max(data, d=>d3.max(d3.values(d.count)));
+			let reviewMin = d3.min(data, d=>d3.min(d3.values(d.count)));
+			drawLineChart(data, containerID, legendId, reviewMax, reviewMin);
 		}
         
 		function loadData() {
             d3.queue()
                 .defer(d3.json, "Las Vegas Business.json")
                 .await((err, data) => {
-				Indian = data.filter(function(i) {
-                        return i.category == "Indian"
-                })
-				American = data.filter(function(i) {
-                        return i.category == "American (Traditional)"
-                })
-				Mexican = data.filter(function(i) {
-                        return i.category == "Mexican"
-                })
-				French = data.filter(function(i) {
-                        return i.category == "French"
-                })
-				Chinese = data.filter(function(i) {
-                        return i.category == "Chinese"
-                })
-				Japanese = data.filter(function(i) {
-                        return i.category == "Japanese"
-                })
-				Vietnamese = data.filter(function(i) {
-                        return i.category == "Vietnamese"
-                })
-				Thai = data.filter(function(i) {
-                        return i.category == "Thai"
-                })
-				Italian = data.filter(function(i) {
-                        return i.category == "Italian"
-                })
-				Mediterranean = data.filter(function(i) {
-                        return i.category == "Mediterranean"
-                })
-				//console.log(Indian)		
-				//console.log(data.map(d=>d.category))
-				manipulateData(Indian, "#Indian")
-				manipulateData(American, "#American")
-				manipulateData(Mexican, "#Mexican")
-				manipulateData(French, "#French")
-				manipulateData(Chinese, "#Chinese")
-				manipulateData(Japanese, "#Japanese")
-				manipulateData(Vietnamese, "#Vietnamese")
-				manipulateData(Thai, "#Thai")
-				manipulateData(Italian, "#Italian")
-				manipulateData(Mediterranean, "#Mediterranean")
-				 })
+					Indian = data.filter(function(i) {
+							return i.category == "Indian"
+					})
+					American = data.filter(function(i) {
+							return i.category == "American (Traditional)"
+					})
+					Mexican = data.filter(function(i) {
+							return i.category == "Mexican"
+					})
+					French = data.filter(function(i) {
+							return i.category == "French"
+					})
+					Chinese = data.filter(function(i) {
+							return i.category == "Chinese"
+					})
+					Japanese = data.filter(function(i) {
+							return i.category == "Japanese"
+					})
+					Vietnamese = data.filter(function(i) {
+							return i.category == "Vietnamese"
+					})
+					Thai = data.filter(function(i) {
+							return i.category == "Thai"
+					})
+					Italian = data.filter(function(i) {
+							return i.category == "Italian"
+					})
+					Mediterranean = data.filter(function(i) {
+							return i.category == "Mediterranean"
+					})
+					//console.log(Indian)		
+					//console.log(data.map(d=>d.category))
+					manipulateData(Indian, "#Indian", "#IndianLegend")
+					manipulateData(American, "#American", "#AmericanLegend")
+					manipulateData(Mexican, "#Mexican", "#MexicanLegend")
+					manipulateData(French, "#French", "#FrenchLegend")
+					manipulateData(Chinese, "#Chinese", "#ChineseLegend")
+					manipulateData(Japanese, "#Japanese", "#JapaneseLegend")
+					manipulateData(Vietnamese, "#Vietnamese", "#VietnameseLegend")
+					manipulateData(Thai, "#Thai", "#ThaiLegend")
+					manipulateData(Italian, "#Italian", "#ItalianLegend")
+					manipulateData(Mediterranean, "#Mediterranean", "#MediterraneanLegend")
+				})
         }
 
         function main() {
